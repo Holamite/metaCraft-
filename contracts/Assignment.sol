@@ -2,32 +2,38 @@
 pragma solidity ^0.8.19;
 
 contract Assignment {
-    address public owner;
-    uint256 public value = 10 ether;
+    address owner;
+    uint age = 18;
+
+    enum Sex {
+        male,
+        female
+    }
+
+    struct User {
+        bool isRegistered;
+        string role;
+    }
+
+    mapping(address => User) users;
 
     constructor() {
         owner = msg.sender;
     }
 
-    function setValue(uint256 _newValue) external {
-        require(msg.sender == owner, "Only the owner can set the value");
-        value = _newValue;
+    function authenticateUser(string memory _role) external {
+        require(!users[msg.sender].isRegistered, "User already exist");
+
+        users[msg.sender] = User(true, _role);
     }
 
-    function buy() external payable {
-        require(msg.value >= value, "Insufficient value sent");
-
-        // If some condition is not met, revert and return funds
-        if (msg.value > 100 ether) {
-            revert("Amount sent exceeds maximum allowed");
+    function subscription(uint _age, Sex _sex) external payable {
+        if (_age < age) {
+            revert("You must be above 18Years");
         }
 
-        // If the condition is met, continue with the transaction
+        assert(_sex == Sex(0));
 
-        // Assertion: Check if the contract balance is greater than zero
-        assert(address(this).balance > 0);
-
-        // Transfer funds to the owner
-        payable(owner).transfer(msg.value);
+        payable(msg.sender).transfer(msg.value);
     }
 }
