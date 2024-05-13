@@ -1,10 +1,11 @@
 # SimpleContract
 
 This Solidity smart contract demonstrates the use of require, revert, and assert statements.
+The Assignment contract includes functionality for user authentication and subscription. It stores user information, including their role and registration status, and allows them to subscribe by paying a fee.
 
 ## Overview
 
-The SimpleContract allows an owner to set a value for transactions and enables others to buy using the buy function.
+This Solidity smart contract allows users to authenticate themselves and subscribe by paying a fee.
 
 ## Requirements
 
@@ -12,49 +13,58 @@ The SimpleContract allows an owner to set a value for transactions and enables o
 
 ## Contract Functions
 
-### setValue(uint256 \_newValue)
+### authenticateUser(string \_role) external
 
-- Allows the contract owner to set the value required for transactions.
-- Only the contract owner can call this function.
+Registers a user with the provided role.
+Requires that the user is not already registered.
+Emits an event upon successful registration.
 
-### buy() payable
+### subscription(uint \_age, Sex \_sex) external payable
 
-- Allows users to buy by sending ether to the contract.
-- Requires that the sent value is equal to or greater than the value set.
-- Reverts the transaction if the sent value exceeds a maximum amount.
-- Transfers the sent ether to the contract owner.
+Allows users to subscribe by paying a fee.
+Requires that the user is above 18 years old.
+Requires that the user's gender is male (0).
+Transfers the sent ether to the contract.
 
 ## Example
 
 ```solidity
 pragma solidity ^0.8.0;
 
-contract SimpleContract {
-    address public owner;
-    uint256 public Value = 10 ether;
+contract Assignment {
+    address owner;
+    uint age = 18;
+
+    enum Sex {
+        male,
+        female
+    }
+
+    struct User {
+        bool isRegistered;
+        string role;
+    }
+
+    mapping(address => User) users;
 
     constructor() {
         owner = msg.sender;
     }
 
-    function setValue(uint256 _newValue) external {
-        require(msg.sender == owner, "Only the owner can set the value");
-        Value = _newValue;
+    function authenticateUser(string memory _role) external {
+        require(!users[msg.sender].isRegistered, "User already exist");
+
+        users[msg.sender] = User(true, _role);
     }
 
-    function buy() external payable {
-
-
-        // Revert if sent value exceeds maximum
-        if (msg.value > 100 ether) {
-            revert("Maximum amount exceeded");
+    function subscription(uint _age, Sex _sex) external payable {
+        if (_age < age) {
+            revert("You must be above 18Years");
         }
 
-        // Ensure contract balance is positive
-        assert(address(this).balance > 0);
+        assert(_sex == Sex(0));
 
-        // Transfer funds to owner
-        payable(owner).transfer(msg.value);
+        payable(msg.sender).transfer(msg.value);
     }
 }
 ```
